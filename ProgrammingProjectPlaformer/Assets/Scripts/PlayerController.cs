@@ -4,14 +4,11 @@ using UnityEngine;
 public class PlayerController : MonoBehaviour
 {
     Rigidbody2D rb;
-    public Collider2D col;
     public float speed;
 
     public LayerMask myLayerMask;
 
     Vector2 playerInput = new Vector2();
-
-    public bool onGround;
     public enum FacingDirection
     {
         left, right
@@ -44,23 +41,14 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void OnCollisionStay2D(Collision2D collision)
-    {
-        //never really saw this difference
-        onGround = true;
-        //ground is layer 3, I saw layertoname which uses an name to get index but this should work.
-    }
-
     public bool IsWalking()
     {
-        if (playerInput.x != 0 && onGround) { return true; }else
+        if (playerInput.x != 0) { return true; }else
         return false;
     }
     public bool IsGrounded()
     {
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down,1f,myLayerMask); 
-        Collider2D collider = hit.collider;
-        Debug.DrawLine(transform.position, collider.ClosestPoint(hit.point),Color.white);
         print(hit.point);
         Debug.DrawRay(transform.position, Vector2.down,Color.red,1);
         if (hit)
