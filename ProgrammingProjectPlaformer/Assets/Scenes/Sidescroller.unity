@@ -1696,6 +1696,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   col: {fileID: 0}
   speed: 0
+  myLayerMask:
+    serializedVersion: 2
+    m_Bits: 0
   onGround: 0
 --- !u!4 &1433354315
 Transform:
@@ -1851,6 +1854,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   col: {fileID: 0}
   speed: 1
+  myLayerMask:
+    serializedVersion: 2
+    m_Bits: 8
   onGround: 0
 --- !u!1 &1598075209
 GameObject:

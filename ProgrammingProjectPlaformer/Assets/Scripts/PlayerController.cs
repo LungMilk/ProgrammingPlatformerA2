@@ -58,19 +58,21 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down,1,myLayerMask); 
+        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down,1f,myLayerMask); 
         Collider2D collider = hit.collider;
+        Debug.DrawLine(transform.position, collider.ClosestPoint(hit.point),Color.white);
+        print(hit.point);
+        Debug.DrawRay(transform.position, Vector2.down,Color.red,1);
         if (hit)
         {
-            print(hit);
-            Debug.DrawLine(transform.position, hit.point);
-        }
-        //hit.point can use magnitude of two points, still will return the playerts transform.
-        if (collider.gameObject.layer == 3 && hit.distance > 0.1)
-        {
+            print("on gorund");
             return true;
         }
-        else { return false; }
+        else 
+        { 
+            print("not on ground"); 
+            return false;
+        }
         
     }
 
