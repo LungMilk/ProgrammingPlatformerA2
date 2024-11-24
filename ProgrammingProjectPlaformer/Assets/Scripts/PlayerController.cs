@@ -30,7 +30,9 @@ public class PlayerController : MonoBehaviour
         //playerInput.y = Input.GetAxis("Vertical");
         MovementUpdate(playerInput);
         GetFacingDirection();
+
         IsGrounded();
+
     }
 
     private void MovementUpdate(Vector2 playerInput)
@@ -48,10 +50,11 @@ public class PlayerController : MonoBehaviour
     }
     public bool IsGrounded()
     {
+        //it could be because of fixed update
         RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down,1f,myLayerMask); 
-        print(hit.point);
+        print(hit.point + hit.collider.gameObject.name);
         Debug.DrawRay(transform.position, Vector2.down,Color.red,1);
-        if (hit)
+        if (hit.collider != null)
         {
             print("on gorund");
             return true;
