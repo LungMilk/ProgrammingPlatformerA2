@@ -14,7 +14,10 @@ public class PlayerController : MonoBehaviour
     public float terminalSpeed;
 
     public LayerMask myLayerMask;
+    public float coyoteTime = 0.2f;
+    float coyoteTimeCounter;
 
+    bool jumping = false;
     Vector2 playerInput = new Vector2();
     public enum FacingDirection
     {
@@ -25,6 +28,7 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = this.gameObject.GetComponent<Rigidbody2D>();
+        coyoteTimeCounter = coyoteTime;
     }
 
     // Update is called once per frame
@@ -35,15 +39,23 @@ public class PlayerController : MonoBehaviour
         // manage the actual movement of the character.
         playerInput.x = Input.GetAxis("Horizontal");
         //playerInput.y = Input.GetAxis("Vertical");
-        MovementUpdate(playerInput);
-        GetFacingDirection();
-        print(IsGrounded());
+        print(coyoteTimeCounter);
         if (!IsGrounded())
         {
             timeInAir++;
-            
+            coyoteTimeCounter -= Time.deltaTime;
+
         }
-        else if (IsGrounded()) { timeInAir = 0; }
+        else if (IsGrounded()) { timeInAir = 0; coyoteTimeCounter = coyoteTime; jumping = false; }
+
+        if (Input.GetKeyDown(KeyCode.Space) && coyoteTimeCounter > 0)
+        {
+            jumping = true;
+        }
+        MovementUpdate(playerInput);
+        GetFacingDirection();
+        print(IsGrounded());
+        
 
     }
 
@@ -51,19 +63,19 @@ public class PlayerController : MonoBehaviour
     {
         //removed && IsGrounded() from addForce to have the player still be able to move in the air.
         //maybe addforce isnt the way to move the player.
-        if (IsWalking()) 
-        { 
+        if (IsWalking())
+        {
             rb.AddForce(playerInput * speed);
         }
-        if (Input.GetKeyDown(KeyCode.Space))
+        if (jumping)
         {
-            print(timeInAir * Time.deltaTime);
             gravity = -2 * apexHeight / (Mathf.Pow(apexTime, 2));
             jumpVelocity = 2 * apexHeight / apexTime;
-            rb.velocity = new Vector3(playerInput.x * speed, gravity * timeInAir + jumpVelocity);
+            rb.velocity = new Vector3(rb.velocity.x, jumpVelocity);
+            
             
         }
-        print(rb.velocity.y);
+        //print(rb.velocity.y);
         if (rb.velocity.y < 0) 
         {
             rb.velocity = new Vector2 (rb.velocity.x, Mathf.Max(rb.velocity.y, -terminalSpeed));
