@@ -8,8 +8,6 @@ public class PlayerController : MonoBehaviour
 
     public float apexHeight, apexTime;
     public float jumpVelocity;
-    float gravity;
-    float timeInAir;
 
     public float terminalSpeed;
 
@@ -17,7 +15,6 @@ public class PlayerController : MonoBehaviour
     public float coyoteTime = 0.2f;
     float coyoteTimeCounter;
 
-    bool jumping = false;
     Vector2 playerInput = new Vector2();
     public enum FacingDirection
     {
@@ -42,16 +39,11 @@ public class PlayerController : MonoBehaviour
         print(coyoteTimeCounter);
         if (!IsGrounded())
         {
-            timeInAir++;
             coyoteTimeCounter -= Time.deltaTime;
-
         }
-        else if (IsGrounded()) { timeInAir = 0; coyoteTimeCounter = coyoteTime; jumping = false; }
+        else if (IsGrounded()) { coyoteTimeCounter = coyoteTime; }
 
-        if (Input.GetKeyDown(KeyCode.Space) && coyoteTimeCounter > 0)
-        {
-            jumping = true;
-        }
+        
         MovementUpdate(playerInput);
         GetFacingDirection();
         print(IsGrounded());
@@ -67,13 +59,11 @@ public class PlayerController : MonoBehaviour
         {
             rb.AddForce(playerInput * speed);
         }
-        if (jumping)
+        if (Input.GetKeyDown(KeyCode.Space) && (IsGrounded() || coyoteTimeCounter > 0))
         {
-            gravity = -2 * apexHeight / (Mathf.Pow(apexTime, 2));
             jumpVelocity = 2 * apexHeight / apexTime;
-            rb.velocity = new Vector3(rb.velocity.x, jumpVelocity);
-            
-            
+            Vector3 pos = new Vector3(playerInput.x, jumpVelocity);
+            rb.AddForce(pos, ForceMode2D.Impulse);
         }
         //print(rb.velocity.y);
         if (rb.velocity.y < 0) 
