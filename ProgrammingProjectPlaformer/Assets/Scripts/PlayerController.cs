@@ -11,6 +11,8 @@ public class PlayerController : MonoBehaviour
     float gravity;
     float timeInAir;
 
+    public float terminalSpeed;
+
     public LayerMask myLayerMask;
 
     Vector2 playerInput = new Vector2();
@@ -60,6 +62,11 @@ public class PlayerController : MonoBehaviour
             jumpVelocity = 2 * apexHeight / apexTime;
             rb.velocity = new Vector3(playerInput.x * speed, gravity * timeInAir + jumpVelocity);
             
+        }
+        print(rb.velocity.y);
+        if (rb.velocity.y < 0) 
+        {
+            rb.velocity = new Vector2 (rb.velocity.x, Mathf.Max(rb.velocity.y, -terminalSpeed));
         }
 
     }
