@@ -9,6 +9,8 @@ public class PlayerVisuals : MonoBehaviour
     private readonly int isWalkingHash = Animator.StringToHash("IsWalking");
     private readonly int isGroundedHash = Animator.StringToHash("IsGrounded");
 
+    
+
     void Update()
     {
         animator.SetBool(isWalkingHash, playerController.IsWalking());

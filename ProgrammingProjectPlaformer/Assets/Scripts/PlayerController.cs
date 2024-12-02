@@ -3,29 +3,51 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    Rigidbody2D rb;
-    public float speed;
-
-    public float apexHeight, apexTime;
-    public float jumpVelocity;
-
-    public float terminalSpeed;
-
-    public LayerMask myLayerMask;
-    public float coyoteTime = 0.2f;
-    float coyoteTimeCounter;
-
-    Vector2 playerInput = new Vector2();
+    
     public enum FacingDirection
     {
         left, right
     }
+    private FacingDirection currentDirection;
+    //going off of the logic explained in class for base movement.
+    [SerializeField] private Rigidbody2D rb;
+
+    [Header("Horizontal Movement")]
+    public float maxSpeed = 5f;
+    public float accelTime = 1f;
+    public float decelTime = 0.75f;
+
+    //headers are cool
+    [Header("vertical movement")]
+    private float accelRate;
+    private float decelRate;
+
+    private Vector2 velocity;
+
+    public float apexHeight =3f;
+    public float apexTime = 0.5f;
+
+    private float gravity;
+    private float jumpVelocity;
+    private bool isGrounded = false;
+
+    [Header("Ground check")]
+    public float groundCheckOffset = 0.5f;
+    public Vector3 groundCheckSize = new(0.4f, 0.1f);
+    public LayerMask groundCheckMask;
 
     // Start is called before the first frame update
     void Start()
     {
         rb = this.gameObject.GetComponent<Rigidbody2D>();
-        coyoteTimeCounter = coyoteTime;
+
+        rb.gravityScale = 0;
+        accelRate = maxSpeed / accelTime;
+        decelRate = maxSpeed / decelTime;
+
+        gravity = -2 * apexHeight / (apexTime * apexTime);
+        jumpVelocity = 2 * apexHeight / apexTime;
+
     }
 
     // Update is called once per frame
@@ -34,74 +56,76 @@ public class PlayerController : MonoBehaviour
         // The input from the player needs to be determined and
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
-        playerInput.x = Input.GetAxis("Horizontal");
-        //playerInput.y = Input.GetAxis("Vertical");
-        print(coyoteTimeCounter);
-        if (!IsGrounded())
-        {
-            coyoteTimeCounter -= Time.deltaTime;
-        }
-        else if (IsGrounded()) { coyoteTimeCounter = coyoteTime; }
 
-        
+
+
+        //digital values instead of simulated joystick movement
+        Vector2 playerInput = new Vector2();
+        playerInput.x = Input.GetAxisRaw("Horizontal");
+ 
         MovementUpdate(playerInput);
-        GetFacingDirection();
-        print(IsGrounded());
-        
+        rb.velocity = velocity;
+        CheckForGround();
 
     }
+    void CheckForGround()
+    {
+        //had to invert teh jumping animations to change properly when on gorund or not
+        isGrounded = Physics2D.OverlapBox(transform.position + Vector3.down * groundCheckOffset,groundCheckSize,0,groundCheckMask);
 
+    }
+    public void OnDrawGizmos()
+    {
+        //just want to see the cube spawn;
+        Gizmos.DrawWireCube(transform.position + Vector3.down * groundCheckOffset, groundCheckSize);
+    }
     private void MovementUpdate(Vector2 playerInput)
     {
-        //removed && IsGrounded() from addForce to have the player still be able to move in the air.
-        //maybe addforce isnt the way to move the player.
-        if (IsWalking())
+        UpdateFacingDirection(playerInput);
+        //for quick turn maybe conserve speed value and simply apply it in teh opposing direction
+        if (playerInput.x != 0)
         {
-            rb.AddForce(playerInput * speed);
+            velocity.x += accelRate * Time.deltaTime * playerInput.x;
+            velocity.x = Mathf.Clamp(velocity.x, -maxSpeed, maxSpeed);
         }
-        if (Input.GetKeyDown(KeyCode.Space) && (IsGrounded() || coyoteTimeCounter > 0))
+        else
         {
-            jumpVelocity = 2 * apexHeight / apexTime;
-            Vector3 pos = new Vector3(playerInput.x, jumpVelocity);
-            rb.AddForce(pos, ForceMode2D.Impulse);
+            if (velocity.x > 0)
+            {
+                velocity.x -= decelRate * Time.deltaTime;
+                velocity.x = Mathf.Max(velocity.x, 0);
+            }
+            if (velocity.x < 0)
+            {
+                velocity.x += decelRate * Time.deltaTime;
+                velocity.x = Mathf.Min(velocity.x, 0);
+            }
         }
-        //print(rb.velocity.y);
-        if (rb.velocity.y < 0) 
-        {
-            rb.velocity = new Vector2 (rb.velocity.x, Mathf.Max(rb.velocity.y, -terminalSpeed));
-        }
+    }
 
+    public void UpdateFacingDirection(Vector2 playerInput)
+    {
+        if (playerInput.x < 0f)
+        {
+            currentDirection = FacingDirection.left;
+        }
+        else if (playerInput.x > 0f)
+        {
+            currentDirection = FacingDirection.right;
+        }
     }
 
     public bool IsWalking()
     {
-        if (playerInput.x != 0) { return true; }else
-        return false;
+        return velocity.x != 0;
     }
     public bool IsGrounded()
     {
-        //it could be because of fixed update
-        RaycastHit2D hit = Physics2D.Raycast(transform.position, Vector2.down,1f,myLayerMask); 
-        //print(hit.point + hit.collider.gameObject.name);
-        //Debug.DrawRay(transform.position, Vector2.down,Color.red,1);
-        if (hit.collider != null)
-        {
-            return true;
-        }
-        else 
-        { 
-            
-            return false;
-        }
-        
-    }
+        return isGrounded;
 
+    }
     public FacingDirection GetFacingDirection()
     {
-        if (rb.velocity.x < 0.1)
-        {
-            return FacingDirection.left;
-        }
-        else { return FacingDirection.right; }
+        return currentDirection;
     }
 }
