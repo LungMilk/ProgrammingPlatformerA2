@@ -8,6 +8,14 @@ public class PlayerController : MonoBehaviour
     {
         left, right
     }
+    public enum CharacterState
+    {
+        Walking,Jumping,Idle,Dead
+    }
+
+    public CharacterState currentState = CharacterState.Idle;
+    public CharacterState lastState = CharacterState.Idle;
+
     private FacingDirection currentDirection;
     //going off of the logic explained in class for base movement.
     [SerializeField] private Rigidbody2D rb;
@@ -29,7 +37,11 @@ public class PlayerController : MonoBehaviour
 
     private float gravity;
     private float jumpVelocity;
+
+    //flushing out bool states
     private bool isGrounded = false;
+    private bool isWalking = false;
+    private bool isDead = false;
 
     [Header("Ground check")]
     public float groundCheckOffset = 0.5f;
@@ -57,15 +69,18 @@ public class PlayerController : MonoBehaviour
         // then passed in the to the MovementUpdate which should
         // manage the actual movement of the character.
 
-
+        lastState = currentState;
+        //probs want to check if dad before doing anything
+        CheckForGround();
 
         //digital values instead of simulated joystick movement
         Vector2 playerInput = new Vector2();
         playerInput.x = Input.GetAxisRaw("Horizontal");
- 
+
+        UpdateCharacterState();
+
         MovementUpdate(playerInput);
         JumpUpdate();
-
         if (!isGrounded)
             velocity.y += gravity * Time.deltaTime;
         else
@@ -73,9 +88,41 @@ public class PlayerController : MonoBehaviour
 
         //getting an error with player assignment
         rb.velocity = velocity;
-        CheckForGround();
 
     }
+
+    private void UpdateCharacterState()
+    {
+        switch (currentState)
+        {
+            case CharacterState.Idle:
+                if (!isGrounded)
+                    currentState = CharacterState.Jumping;
+                else if (isWalking)
+                    currentState = CharacterState.Walking;
+                break;
+            case CharacterState.Walking:
+                if (!isGrounded)
+                    currentState = CharacterState.Jumping;
+                else if (!isWalking)
+                    currentState = CharacterState.Idle;
+                break;
+            case CharacterState.Jumping:
+                if (isGrounded)
+                {
+                    if (isWalking)
+                        currentState = CharacterState.Walking;
+                    else
+                        currentState = CharacterState.Idle;
+                }
+                break;
+
+            case CharacterState.Dead:
+                //do nothing
+                break;
+        }
+    }
+
     void CheckForGround()
     {
         //had to invert teh jumping animations to change properly when on gorund or not
@@ -109,6 +156,7 @@ public class PlayerController : MonoBehaviour
                 velocity.x = Mathf.Min(velocity.x, 0);
             }
         }
+        isWalking = velocity.x != 0;
     }
 
     void JumpUpdate()
