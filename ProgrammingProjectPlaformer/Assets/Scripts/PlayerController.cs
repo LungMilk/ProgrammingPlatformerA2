@@ -64,6 +64,14 @@ public class PlayerController : MonoBehaviour
         playerInput.x = Input.GetAxisRaw("Horizontal");
  
         MovementUpdate(playerInput);
+        JumpUpdate();
+
+        if (!isGrounded)
+            velocity.y += gravity * Time.deltaTime;
+        else
+            velocity.y = 0;
+
+        //getting an error with player assignment
         rb.velocity = velocity;
         CheckForGround();
 
@@ -100,6 +108,15 @@ public class PlayerController : MonoBehaviour
                 velocity.x += decelRate * Time.deltaTime;
                 velocity.x = Mathf.Min(velocity.x, 0);
             }
+        }
+    }
+
+    void JumpUpdate()
+    {
+        if (isGrounded && Input.GetButton("Jump"))
+        {
+            velocity.y = jumpVelocity;
+            isGrounded = false;
         }
     }
 
