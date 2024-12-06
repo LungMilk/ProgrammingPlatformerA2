@@ -25,12 +25,15 @@ public class PlayerController : MonoBehaviour
     public float accelTime = 1f;
     public float decelTime = 0.75f;
 
+    public float turnSpeed = 0f;
+
     //headers are cool
     [Header("vertical movement")]
     private float accelRate;
     private float decelRate;
 
     private Vector2 velocity;
+    Vector2 lastPlayerInput;
 
     public float apexHeight =3f;
     public float apexTime = 0.5f;
@@ -80,6 +83,11 @@ public class PlayerController : MonoBehaviour
         UpdateCharacterState();
 
         MovementUpdate(playerInput);
+        if (playerInput != Vector2.zero)
+        {
+            lastPlayerInput = playerInput;
+        }
+ 
         JumpUpdate();
         if (!isGrounded)
             velocity.y += gravity * Time.deltaTime;
@@ -136,11 +144,18 @@ public class PlayerController : MonoBehaviour
     }
     private void MovementUpdate(Vector2 playerInput)
     {
+        //when the player is turning apply an opposing force in the new direciton 
+        if (lastPlayerInput.x != playerInput.x && isWalking)
+        {
+            print("turning");
+            accelRate = (maxSpeed / accelTime) *turnSpeed;
+        }
+        else { accelRate = maxSpeed / accelTime; ; }
         UpdateFacingDirection(playerInput);
         //for quick turn maybe conserve speed value and simply apply it in teh opposing direction
         if (playerInput.x != 0)
         {
-            velocity.x += accelRate * Time.deltaTime * playerInput.x;
+            velocity.x += accelRate * Time.deltaTime * playerInput.x * turnSpeed;
             velocity.x = Mathf.Clamp(velocity.x, -maxSpeed, maxSpeed);
         }
         else
