@@ -40,16 +40,25 @@ public class PlayerController : MonoBehaviour
 
     private float gravity;
     private float jumpVelocity;
+    public float wallJumpLimit;
+    public float wallJumpsDone;
 
     //flushing out bool states
     private bool isGrounded = false;
     private bool isWalking = false;
     private bool isDead = false;
+    private bool isTouchingRightWall = false;
+    private bool isTouchingLeftWall = false;
 
     [Header("Ground check")]
     public float groundCheckOffset = 0.5f;
     public Vector3 groundCheckSize = new(0.4f, 0.1f);
     public LayerMask groundCheckMask;
+
+    public float wallCheckOffset = 0.5f;
+    public Vector3 wallCheckSize = new(0.4f, 0.1f);
+    public LayerMask wallCheckMask;
+
 
     // Start is called before the first frame update
     void Start()
@@ -75,6 +84,7 @@ public class PlayerController : MonoBehaviour
         lastState = currentState;
         //probs want to check if dad before doing anything
         CheckForGround();
+        CheckForWalls();
 
         //digital values instead of simulated joystick movement
         Vector2 playerInput = new Vector2();
@@ -93,6 +103,7 @@ public class PlayerController : MonoBehaviour
             velocity.y += gravity * Time.deltaTime;
         else
             velocity.y = 0;
+            //wallJumpsDone = 0;
 
         //getting an error with player assignment
         rb.velocity = velocity;
@@ -131,6 +142,13 @@ public class PlayerController : MonoBehaviour
         }
     }
 
+    void CheckForWalls()
+    {
+        //right is default
+        isTouchingRightWall = Physics2D.OverlapBox(transform.position + Vector3.right * wallCheckOffset,wallCheckSize,0,wallCheckMask);
+        isTouchingLeftWall = Physics2D.OverlapBox(transform.position + Vector3.right * -wallCheckOffset, wallCheckSize, 0, wallCheckMask);
+    }
+
     void CheckForGround()
     {
         //had to invert teh jumping animations to change properly when on gorund or not
@@ -141,16 +159,13 @@ public class PlayerController : MonoBehaviour
     {
         //just want to see the cube spawn;
         Gizmos.DrawWireCube(transform.position + Vector3.down * groundCheckOffset, groundCheckSize);
+        Gizmos.DrawWireCube(transform.position + Vector3.right * wallCheckOffset, wallCheckSize);
+        Gizmos.DrawWireCube(transform.position + Vector3.right * -wallCheckOffset, wallCheckSize);
     }
     private void MovementUpdate(Vector2 playerInput)
     {
         //when the player is turning apply an opposing force in the new direciton 
-        if (lastPlayerInput.x != playerInput.x && isWalking)
-        {
-            print("turning");
-            accelRate = (maxSpeed / accelTime) *turnSpeed;
-        }
-        else { accelRate = maxSpeed / accelTime; ; }
+        TurningAccel(playerInput);
         UpdateFacingDirection(playerInput);
         //for quick turn maybe conserve speed value and simply apply it in teh opposing direction
         if (playerInput.x != 0)
@@ -174,12 +189,24 @@ public class PlayerController : MonoBehaviour
         isWalking = velocity.x != 0;
     }
 
+    private void TurningAccel(Vector2 playerInput)
+    {
+        if (lastPlayerInput.x != playerInput.x && isWalking)
+        {
+            //print("turning");
+            accelRate = (maxSpeed / accelTime) * turnSpeed;
+        }
+        else { accelRate = maxSpeed / accelTime; }
+    }
+
     void JumpUpdate()
     {
-        if (isGrounded && Input.GetButton("Jump"))
+        if ((isGrounded || (isTouchingRightWall || isTouchingLeftWall)) && Input.GetButton("Jump"))
         {
             velocity.y = jumpVelocity;
             isGrounded = false;
+            //everytime im running this update the player is touching the wall and 
+            //counter is not incrementing by one as the funciton runs for multiple frames.
         }
     }
 
