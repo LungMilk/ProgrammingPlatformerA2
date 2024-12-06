@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEditor;
 using UnityEngine;
 
@@ -27,6 +28,14 @@ public class PlayerController : MonoBehaviour
 
     public float turnSpeed = 0f;
 
+    public float dashVelocity;
+    public float dashTime;
+
+    private Vector2 dashDirection;
+    private bool isDashing;
+    private bool canDash = true;
+
+
     //headers are cool
     [Header("vertical movement")]
     private float accelRate;
@@ -40,8 +49,6 @@ public class PlayerController : MonoBehaviour
 
     private float gravity;
     private float jumpVelocity;
-    public float wallJumpLimit;
-    public float wallJumpsDone;
 
     //flushing out bool states
     private bool isGrounded = false;
@@ -97,13 +104,27 @@ public class PlayerController : MonoBehaviour
         {
             lastPlayerInput = playerInput;
         }
+
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        {
+            print("dashing");
+            isDashing = true;
+            canDash = false;
+            dashDirection = new Vector2(playerInput.x, Input.GetAxisRaw("Vertical"));
+            StartCoroutine(StopDashing());
+        }
  
         JumpUpdate();
+        //AirDash(playerInput);
         if (!isGrounded)
             velocity.y += gravity * Time.deltaTime;
         else
             velocity.y = 0;
-            //wallJumpsDone = 0;
+            canDash = true ;
+        if (lastState == CharacterState.Jumping && isGrounded)
+        {
+            print("landed");
+        }
 
         //getting an error with player assignment
         rb.velocity = velocity;
@@ -187,6 +208,13 @@ public class PlayerController : MonoBehaviour
             }
         }
         isWalking = velocity.x != 0;
+
+        if (isDashing)
+        {
+            print("dashed");
+            //so the problem is with the velocity being modified
+            velocity = dashDirection.normalized * dashVelocity;
+        }
     }
 
     private void TurningAccel(Vector2 playerInput)
@@ -209,6 +237,26 @@ public class PlayerController : MonoBehaviour
             //counter is not incrementing by one as the funciton runs for multiple frames.
         }
     }
+    IEnumerator StopDashing()
+    {
+        //co routine is determineing the length of time in which the player is able to dash
+        yield return new WaitForSeconds(dashTime);
+        isDashing = false;
+    }
+    void AirDash(Vector2 playerInput)
+    {
+        if (!isGrounded && Input.GetKey(KeyCode.LeftShift))
+        {
+            velocity += playerInput * dashVelocity;
+            //its not omnidirectional but the player can dash repeatedly.
+                print("air dashing");
+                print(playerInput * jumpVelocity);
+                //velocity += playerInput * jumpVelocity;
+                
+            //
+        }
+    }
+
 
     public void UpdateFacingDirection(Vector2 playerInput)
     {
