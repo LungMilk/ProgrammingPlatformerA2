@@ -2218,8 +2218,8 @@ MonoBehaviour:
   maxSpeed: 5
   accelTime: 1
   decelTime: 0.45
-  turnSpeed: 10
-  dashVelocity: 10
+  turnSpeed: 20
+  dashVelocity: 8
   dashTime: 0.4
   apexHeight: 4
   apexTime: 0.5

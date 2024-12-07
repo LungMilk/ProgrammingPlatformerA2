@@ -106,7 +106,7 @@ public class PlayerController : MonoBehaviour
             lastPlayerInput = playerInput;
         }
 
-        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
+        if (Input.GetKeyDown(KeyCode.LeftShift) && canDash && !isGrounded)
         {
             //print("dashing");
             isDashing = true;
@@ -218,7 +218,7 @@ public class PlayerController : MonoBehaviour
     private void MovementUpdate(Vector2 playerInput)
     {
         //when the player is turning apply an opposing force in the new direciton 
-        TurningAccel(playerInput);
+        //TurningAccel(playerInput);
         UpdateFacingDirection(playerInput);
         //for quick turn maybe conserve speed value and simply apply it in teh opposing direction
         if (playerInput.x != 0)
