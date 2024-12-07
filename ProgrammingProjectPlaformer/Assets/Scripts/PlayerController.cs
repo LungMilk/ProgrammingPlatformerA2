@@ -11,7 +11,7 @@ public class PlayerController : MonoBehaviour
     }
     public enum CharacterState
     {
-        Walking,Jumping,Idle,Dead
+        Walking,Jumping,Idle,Dead, WallJumping,Dashing
     }
 
     public CharacterState currentState = CharacterState.Idle;
@@ -33,6 +33,7 @@ public class PlayerController : MonoBehaviour
 
     private Vector2 dashDirection;
     private bool isDashing;
+    private bool isWallJumping = false;
     private bool canDash = true;
 
 
@@ -107,7 +108,7 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.LeftShift) && canDash)
         {
-            print("dashing");
+            //print("dashing");
             isDashing = true;
             canDash = false;
             dashDirection = new Vector2(playerInput.x, Input.GetAxisRaw("Vertical"));
@@ -121,14 +122,16 @@ public class PlayerController : MonoBehaviour
         else
             velocity.y = 0;
             canDash = true ;
-        if (lastState == CharacterState.Jumping && isGrounded)
+
+        if (velocity.y == 0)
         {
             print("landed");
+            isWallJumping = false;
         }
 
         //getting an error with player assignment
         rb.velocity = velocity;
-
+        print(currentState);
     }
 
     private void UpdateCharacterState()
@@ -138,6 +141,8 @@ public class PlayerController : MonoBehaviour
             case CharacterState.Idle:
                 if (!isGrounded)
                     currentState = CharacterState.Jumping;
+                else if (!isGrounded && (!isGrounded && isWallJumping))
+                    currentState = CharacterState.WallJumping;
                 else if (isWalking)
                     currentState = CharacterState.Walking;
                 break;
@@ -146,19 +151,46 @@ public class PlayerController : MonoBehaviour
                     currentState = CharacterState.Jumping;
                 else if (!isWalking)
                     currentState = CharacterState.Idle;
+                else if (isDashing)
+                    currentState = CharacterState.Dashing;
                 break;
             case CharacterState.Jumping:
-                if (isGrounded)
+                if (!isGrounded && isWallJumping)
+                    currentState = CharacterState.WallJumping;
+                else if (isDashing)
+                {
+                    currentState = CharacterState.Dashing;
+                    print("dashing");
+                }
+                else if (isGrounded)
                 {
                     if (isWalking)
                         currentState = CharacterState.Walking;
                     else
                         currentState = CharacterState.Idle;
+
                 }
                 break;
 
             case CharacterState.Dead:
                 //do nothing
+                break;
+            case CharacterState.WallJumping:
+                if (isGrounded)
+                {
+                    currentState = CharacterState.Idle;
+                }
+                else if (isDashing)
+                {
+                    currentState = CharacterState.Dashing;
+                    print("dashing");
+                }
+                break;
+            case CharacterState.Dashing:
+                if (isGrounded)
+                {
+                    currentState = CharacterState.Idle;
+                }
                 break;
         }
     }
@@ -211,7 +243,7 @@ public class PlayerController : MonoBehaviour
 
         if (isDashing)
         {
-            print("dashed");
+            //print("dashed");
             //so the problem is with the velocity being modified
             velocity = dashDirection.normalized * dashVelocity;
         }
@@ -231,8 +263,13 @@ public class PlayerController : MonoBehaviour
     {
         if ((isGrounded || (isTouchingRightWall || isTouchingLeftWall)) && Input.GetButton("Jump"))
         {
+            if ((isTouchingLeftWall || isTouchingRightWall))
+            {
+                isWallJumping = true;
+            }
             velocity.y = jumpVelocity;
             isGrounded = false;
+            
             //everytime im running this update the player is touching the wall and 
             //counter is not incrementing by one as the funciton runs for multiple frames.
         }
@@ -243,21 +280,6 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(dashTime);
         isDashing = false;
     }
-    void AirDash(Vector2 playerInput)
-    {
-        if (!isGrounded && Input.GetKey(KeyCode.LeftShift))
-        {
-            velocity += playerInput * dashVelocity;
-            //its not omnidirectional but the player can dash repeatedly.
-                print("air dashing");
-                print(playerInput * jumpVelocity);
-                //velocity += playerInput * jumpVelocity;
-                
-            //
-        }
-    }
-
-
     public void UpdateFacingDirection(Vector2 playerInput)
     {
         if (playerInput.x < 0f)

@@ -9,9 +9,12 @@ public class PlayerVisuals : MonoBehaviour
     private readonly int idleStateHash = Animator.StringToHash("Idle");
     private readonly int walkingStateHash = Animator.StringToHash("Walking");
     private readonly int jumpingStateHash = Animator.StringToHash("Jumping");
+    private readonly int wallJumpingStateHash = Animator.StringToHash("WallJumping");
+    private readonly int dashingStateHash = Animator.StringToHash("Dashing");
 
 
-    
+
+
 
     public void Update()
     {
@@ -36,6 +39,12 @@ public class PlayerVisuals : MonoBehaviour
                     animator.CrossFade(jumpingStateHash, 0);
                     break;
                 case PlayerController.CharacterState.Dead:
+                    break;
+                case PlayerController.CharacterState.WallJumping:
+                    animator.CrossFade(wallJumpingStateHash, 0);
+                    break;
+                case PlayerController.CharacterState.Dashing:
+                    animator.CrossFade(dashingStateHash,0);
                     break;
             }
         }
