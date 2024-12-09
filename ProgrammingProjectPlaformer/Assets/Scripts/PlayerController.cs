@@ -139,7 +139,7 @@ public class PlayerController : MonoBehaviour
             //shake on landing
             if(isGrounded && !didShake)
             {
-                camera.Shake(2,3);
+                //camera.Shake(2,3);
                 didShake = true;
             }
             if (!isGrounded)
@@ -207,7 +207,7 @@ public class PlayerController : MonoBehaviour
                 }
                 break;
             case CharacterState.Dashing:
-                if (isGrounded)
+                if (isGrounded && !isDashing)
                 {
                     currentState = CharacterState.Idle;
                 }
