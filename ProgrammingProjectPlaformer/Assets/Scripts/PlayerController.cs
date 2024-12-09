@@ -249,16 +249,6 @@ public class PlayerController : MonoBehaviour
         }
     }
 
-    private void TurningAccel(Vector2 playerInput)
-    {
-        if (lastPlayerInput.x != playerInput.x && isWalking)
-        {
-            //print("turning");
-            accelRate = (maxSpeed / accelTime) * turnSpeed;
-        }
-        else { accelRate = maxSpeed / accelTime; }
-    }
-
     void JumpUpdate()
     {
         if ((isGrounded || (isTouchingRightWall || isTouchingLeftWall)) && Input.GetButton("Jump"))
