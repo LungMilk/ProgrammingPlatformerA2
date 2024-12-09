@@ -72,11 +72,12 @@ public class PlayerController : MonoBehaviour
     void Start()
     {
         rb = this.gameObject.GetComponent<Rigidbody2D>();
-
+        //disables gravity so it can be manipulated for gameplay feel
         rb.gravityScale = 0;
+        //setting base physics values for movement and player physics
         accelRate = maxSpeed / accelTime;
         decelRate = maxSpeed / decelTime;
-
+        //setting gravity of the player and their jump velocity so it can be changed and tweaked
         gravity = -2 * apexHeight / (apexTime * apexTime);
         jumpVelocity = 2 * apexHeight / apexTime;
 
@@ -90,52 +91,56 @@ public class PlayerController : MonoBehaviour
         // manage the actual movement of the character.
 
         lastState = currentState;
-        //probs want to check if dad before doing anything
+        //probs want to check if dead before doing anything
+        //starts each frame with the detection of walls and ground to determine state
         CheckForGround();
         CheckForWalls();
+        UpdateCharacterState();
 
+        //player input is saved so it changes everyframe and applied each frame
         //digital values instead of simulated joystick movement
         Vector2 playerInput = new Vector2();
         playerInput.x = Input.GetAxisRaw("Horizontal");
-
-        UpdateCharacterState();
-
+        //movement update is all physics placed on the player
         MovementUpdate(playerInput);
+        //records the last placer input used for turning
         if (playerInput != Vector2.zero)
         {
             lastPlayerInput = playerInput;
         }
-
+        //sets the player state to dashing if they are elligable to dash
         if (Input.GetKeyDown(KeyCode.LeftShift) && canDash && !isGrounded)
         {
             //print("dashing");
             isDashing = true;
             canDash = false;
+            //dash direction records all player input for direciton to be applied over time 
             dashDirection = new Vector2(playerInput.x, Input.GetAxisRaw("Vertical"));
             StartCoroutine(StopDashing());
         }
- 
+        //jumpUpdate updates the players vertical position after all horizontal, physics and state logic that might impact it
         JumpUpdate();
         //AirDash(playerInput);
+        //fallspeed clamps and falling physics
         if (!isGrounded)
             velocity.y += gravity * Time.deltaTime;
         else
             velocity.y = 0;
             canDash = true ;
-
+        //landing state
         if (velocity.y == 0)
         {
             print("landed");
             isWallJumping = false;
         }
-
-        //getting an error with player assignment
+        //every frame updates the players physics
         rb.velocity = velocity;
         print(currentState);
     }
 
     private void UpdateCharacterState()
     {
+        //state machine managing the players state and what states flow into one another
         switch (currentState)
         {
             case CharacterState.Idle:
@@ -197,6 +202,7 @@ public class PlayerController : MonoBehaviour
 
     void CheckForWalls()
     {
+        //physics boxcasts that determine collisions with other colliders
         //right is default
         isTouchingRightWall = Physics2D.OverlapBox(transform.position + Vector3.right * wallCheckOffset,wallCheckSize,0,wallCheckMask);
         isTouchingLeftWall = Physics2D.OverlapBox(transform.position + Vector3.right * -wallCheckOffset, wallCheckSize, 0, wallCheckMask);
@@ -204,25 +210,30 @@ public class PlayerController : MonoBehaviour
 
     void CheckForGround()
     {
-        //had to invert teh jumping animations to change properly when on gorund or not
+        //same as walls but for ground only and underneath player
+        //had to invert the jumping animations to change properly when on gorund or not
         isGrounded = Physics2D.OverlapBox(transform.position + Vector3.down * groundCheckOffset,groundCheckSize,0,groundCheckMask);
 
     }
     public void OnDrawGizmos()
     {
-        //just want to see the cube spawn;
+        //draws the cubes in scene view so I can see what they are and are not touching
         Gizmos.DrawWireCube(transform.position + Vector3.down * groundCheckOffset, groundCheckSize);
         Gizmos.DrawWireCube(transform.position + Vector3.right * wallCheckOffset, wallCheckSize);
         Gizmos.DrawWireCube(transform.position + Vector3.right * -wallCheckOffset, wallCheckSize);
     }
     private void MovementUpdate(Vector2 playerInput)
     {
-        //when the player is turning apply an opposing force in the new direciton 
         //TurningAccel(playerInput);
+        //player sprite direciton is updated to move with the input.
         UpdateFacingDirection(playerInput);
+
         //for quick turn maybe conserve speed value and simply apply it in teh opposing direction
+
+        //detects if the player should be moving and applies acceleration to a vector which is then added to the players velocity
         if (playerInput.x != 0)
         {
+            //turnspeed 
             velocity.x += accelRate * Time.deltaTime * playerInput.x * turnSpeed;
             velocity.x = Mathf.Clamp(velocity.x, -maxSpeed, maxSpeed);
         }
@@ -253,15 +264,16 @@ public class PlayerController : MonoBehaviour
     {
         if ((isGrounded || (isTouchingRightWall || isTouchingLeftWall)) && Input.GetButton("Jump"))
         {
+            //determines wall jumping state if jumping when touching a wall
             if ((isTouchingLeftWall || isTouchingRightWall))
             {
                 isWallJumping = true;
             }
+            //wall jump is the same as normal jump just different conditionals
             velocity.y = jumpVelocity;
             isGrounded = false;
             
             //everytime im running this update the player is touching the wall and 
-            //counter is not incrementing by one as the funciton runs for multiple frames.
         }
     }
     IEnumerator StopDashing()
