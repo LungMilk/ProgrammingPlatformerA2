@@ -2180,12 +2180,12 @@ MonoBehaviour:
   apexHeight: 4
   apexTime: 0.5
   groundCheckOffset: 0.7
-  groundCheckSize: {x: 0.6, y: 0.1, z: 0}
+  groundCheckSize: {x: 0.99, y: 0.1, z: 0}
   groundCheckMask:
     serializedVersion: 2
     m_Bits: 8
   wallCheckOffset: 0.5
-  wallCheckSize: {x: 0.4, y: 1, z: 0}
+  wallCheckSize: {x: 1, y: 0.52, z: 0}
   wallCheckMask:
     serializedVersion: 2
     m_Bits: 64
