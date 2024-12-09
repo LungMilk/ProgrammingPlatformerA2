@@ -233,12 +233,13 @@ public class PlayerController : MonoBehaviour
         //detects if the player should be moving and applies acceleration to a vector which is then added to the players velocity
         if (playerInput.x != 0)
         {
-            //turnspeed 
+            //turnspeed increases the player acceleration by a large value to overcome itself and drag When player is turning
             velocity.x += accelRate * Time.deltaTime * playerInput.x * turnSpeed;
             velocity.x = Mathf.Clamp(velocity.x, -maxSpeed, maxSpeed);
         }
         else
         {
+            //when player is not touching anything and they are moving apply deceleration
             if (velocity.x > 0)
             {
                 velocity.x -= decelRate * Time.deltaTime;
@@ -250,18 +251,19 @@ public class PlayerController : MonoBehaviour
                 velocity.x = Mathf.Min(velocity.x, 0);
             }
         }
+        //player must be walking if horizontal velocity is greater than 0
         isWalking = velocity.x != 0;
 
         if (isDashing)
         {
-            //print("dashed");
-            //so the problem is with the velocity being modified
+            //dashing direction applies a force in a saved direction so player is commited to the dash
             velocity = dashDirection.normalized * dashVelocity;
         }
     }
 
     void JumpUpdate()
     {
+        //if conditional and buttons are correct jump
         if ((isGrounded || (isTouchingRightWall || isTouchingLeftWall)) && Input.GetButton("Jump"))
         {
             //determines wall jumping state if jumping when touching a wall
@@ -280,10 +282,12 @@ public class PlayerController : MonoBehaviour
     {
         //co routine is determineing the length of time in which the player is able to dash
         yield return new WaitForSeconds(dashTime);
+        //then resets state to not dashing removing the force application
         isDashing = false;
     }
     public void UpdateFacingDirection(Vector2 playerInput)
     {
+        //depending on player input the enum value of currentdireciton changes so the visuals cna be flipped. This is based on player input
         if (playerInput.x < 0f)
         {
             currentDirection = FacingDirection.left;
@@ -293,7 +297,7 @@ public class PlayerController : MonoBehaviour
             currentDirection = FacingDirection.right;
         }
     }
-
+    //returns values for better communication between the visual tracker script
     public bool IsWalking()
     {
         return velocity.x != 0;
