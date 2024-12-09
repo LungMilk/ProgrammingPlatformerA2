@@ -1,10 +1,11 @@
 using System.Collections;
 using UnityEditor;
+using UnityEditor.Callbacks;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviour
 {
-    
+    [SerializeField] CameraController2D camera;
     public enum FacingDirection
     {
         left, right
@@ -57,6 +58,7 @@ public class PlayerController : MonoBehaviour
     private bool isDead = false;
     private bool isTouchingRightWall = false;
     private bool isTouchingLeftWall = false;
+    private bool didShake = false;
 
     [Header("Ground check")]
     public float groundCheckOffset = 0.5f;
@@ -114,6 +116,7 @@ public class PlayerController : MonoBehaviour
             //print("dashing");
             isDashing = true;
             canDash = false;
+            isWallJumping = false;
             //dash direction records all player input for direciton to be applied over time 
             dashDirection = new Vector2(playerInput.x, Input.GetAxisRaw("Vertical"));
             StartCoroutine(StopDashing());
@@ -132,6 +135,18 @@ public class PlayerController : MonoBehaviour
         {
             print("landed");
             isWallJumping = false;
+
+            //shake on landing
+            if(isGrounded && !didShake)
+            {
+                camera.Shake(2,3);
+                didShake = true;
+            }
+            if (!isGrounded)
+            {
+                didShake = false;
+            }
+            
         }
         //every frame updates the players physics
         rb.velocity = velocity;
@@ -196,6 +211,8 @@ public class PlayerController : MonoBehaviour
                 {
                     currentState = CharacterState.Idle;
                 }
+                else if (!isGrounded && isWallJumping)
+                    currentState = CharacterState.WallJumping;
                 break;
         }
     }
